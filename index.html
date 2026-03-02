@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Republic AI Node Monitor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+        }
+        .header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .header p { opacity: 0.9; }
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .card h3 {
+            color: #667eea;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+        .card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+        .status { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.875rem; font-weight: 600; }
+        .status.active { background: #48bb78; color: white; }
+        .status.syncing { background: #f6ad55; color: white; }
+        .refresh-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: block;
+            margin: 2rem auto;
+        }
+        .refresh-btn:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Republic AI Node Monitor</h1>
+            <p>Real-time validator and GPU mining statistics</p>
+        </div>
+        
+        <div class="cards">
+            <div class="card">
+                <h3>Node Status</h3>
+                <div class="value"><span class="status active" id="status">Active</span></div>
+            </div>
+            <div class="card">
+                <h3>Current Block</h3>
+                <div class="value" id="block">Loading...</div>
+            </div>
+            <div class="card">
+                <h3>Voting Power</h3>
+                <div class="value" id="voting-power">Loading...</div>
+            </div>
+            <div class="card">
+                <h3>Catching Up</h3>
+                <div class="value" id="catching-up">Loading...</div>
+            </div>
+            <div class="card">
+                <h3>Jobs Assigned</h3>
+                <div class="value" id="jobs">Loading...</div>
+            </div>
+            <div class="card">
+                <h3>GPU Status</h3>
+                <div class="value" id="gpu-status">Active</div>
+            </div>
+        </div>
+        
+        <button class="refresh-btn" onclick="fetchData()">🔄 Refresh Data</button>
+    </div>
+
+    <script>
+        async function fetchData() {
+            try {
+                // Bu kısım RPC'den veri çekecek - şimdilik örnek veri
+                document.getElementById('block').textContent = '531,783';
+                document.getElementById('voting-power').textContent = '4,003 RAI';
+                document.getElementById('catching-up').textContent = 'False ✅';
+                document.getElementById('jobs').textContent = '1 Pending';
+            } catch (e) {
+                console.error('Error fetching data:', e);
+            }
+        }
+        
+        // İlk yüklemede veri çek
+        fetchData();
+        
+        // Her 10 saniyede bir güncelle
+        setInterval(fetchData, 10000);
+    </script>
+</body>
+</html>
