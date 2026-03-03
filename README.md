@@ -19,9 +19,9 @@
 |----------|-------|
 | **Validator Address** | raivaloper1xnjkyyggaz54288vtrsle9wjwqz5tz4lttk8ka |
 | **Chain ID** | raitestnet_77701-1 |
-| **Voting Power** | 4,003 RAI |
+| **Voting Power** | 6,469 RAI |
 | **GPU** | NVIDIA RTX 4050 Laptop — 6GB VRAM |
-| **Inference Speed** | ~15s per job (GPU) |
+| **Inference Speed** | ~8s per job (GPU) |
 | **Status** | Active & Synced |
 
 ---
