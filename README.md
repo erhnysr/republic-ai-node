@@ -129,3 +129,17 @@
 *Built with love by [@Erhnysr](https://github.com/erhnysr) — Running on WSL2 + RTX 4050*
 
 </div>
+
+---
+
+## 🤝 Open Source Contributions
+
+### OpenMind OM1 — Merged PR
+- **PR #2259**: [fix: correct 'succession' to 'sequence' in architecture docs](https://github.com/OpenMind/OM1/pull/2259)
+- **Project**: OpenMind OM1 — Modular AI runtime for robots
+- **Type**: Documentation improvement
+- **Status**: ✅ Merged into main
+
+### Republic AI Networks — Merged PR
+- **PR #24**: Troubleshooting guide for common node setup issues
+- **Status**: ✅ Merged
