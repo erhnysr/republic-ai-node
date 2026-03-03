@@ -102,3 +102,17 @@ python3 monitoring/gpu_tracker.py
 ## 🔄 CI/CD
 GitHub Actions automatically tests all commits.
 
+
+## 🐳 Docker Deployment
+```bash
+docker-compose up -d
+```
+
+## 📊 GPU Monitoring
+```bash
+python3 monitoring/gpu_tracker.py
+```
+
+## 🔄 CI/CD
+GitHub Actions automatically tests all commits.
+
