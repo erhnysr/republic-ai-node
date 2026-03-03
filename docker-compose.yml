@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  validator:
+    image: republic-validator:latest
+    restart: unless-stopped
+    ports:
+      - "26656:26656"
+    volumes:
+      - ./data:/root/.republic
+  gpu-miner:
+    image: republic-llm-inference:latest
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    volumes:
+      - /var/lib/republic/jobs:/output
