@@ -41,7 +41,7 @@ Live validator & network monitoring dashboard.
 - ✅ Active validator since January 29, 2026
 - ✅ 1,008,342 RAI voting power
 - ✅ 10,000+ compute jobs processed
-- ✅ 3 merged PRs to RepublicAI/networks
+- ✅ 2 open PRs to RepublicAI/networks (pending review)
 - ✅ Developer role recipient
 
 ## 🔗 Links
