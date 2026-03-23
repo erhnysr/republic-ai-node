@@ -1,60 +1,181 @@
-# 🚀 Republic AI - Full Validator & GPU Mining Suite
+<div align="center">
 
-A comprehensive open-source toolkit for Republic AI validators.
+# 🚀 Republic AI Node
 
-**Active Validator:** ERHANREPU | 1,008,342 RAI voting power
+[![CI](https://github.com/erhnysr/republic-ai-node/actions/workflows/ci.yml/badge.svg)](https://github.com/erhnysr/republic-ai-node/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Chain](https://img.shields.io/badge/Chain-raitestnet__77701--1-blue)](https://explorer.republicai.io)
+[![Validator](https://img.shields.io/badge/Validator-ERHANREPU-green)](https://explorer.republicai.io)
+[![GPU](https://img.shields.io/badge/GPU-RTX%204050-76b900)](https://github.com/erhnysr/republic-ai-node)
+[![Jobs](https://img.shields.io/badge/Jobs%20Processed-200K%2B-orange)](https://github.com/erhnysr/republic-ai-node)
 
-## 📦 Projects
+**Production-ready toolkit for Republic AI validators**
+*Full-auto GPU compute • Thermal protection • Cloudflare tunnel • WSL2 support*
 
-### 1. 🖥️ Full Validator + GPU Node Setup
-Complete installation guide for Republic AI validator node with GPU compute.
-- WSL2 + Windows setup guide
-- NVIDIA CUDA + Docker GPU configuration
-- Cloudflare tunnel for WSL2
-- Auto-unjail protection
+[Quick Start](#quick-start) • [Documentation](#documentation) • [Scripts](#scripts) • [Monitoring](#monitoring)
 
-### 2. ⚙️ Full-Auto Job Processing Pipeline
-Automated GPU compute job system — 40-50 jobs/hour.
-- Auto job submission & execution
-- GPU inference with Docker
-- Bech32 bug workaround
-- Watchdog for 24/7 operation
-- Thermal protection (auto-slowdown at 80°C)
+</div>
 
-### 3. 📊 Real-Time Monitoring Dashboard
-Live validator & network monitoring dashboard.
-- Block height & sync status
-- Validator uptime tracking
-- GPU performance metrics
-- Job completion stats
+---
 
-## 🆕 Ecosystem Projects
+## ⚡ Quick Start
+```bash
+curl -sSL https://raw.githubusercontent.com/erhnysr/republic-ai-node/main/scripts/install.sh | bash
+```
 
-| Project | Description | Link |
-|---------|-------------|------|
-| 🤖 Discord Bot | Validator monitoring & alerts | [republic-discord-bot](https://github.com/erhnysr/republic-discord-bot) |
-| 🎯 Job Orchestrator | Multi-validator job distribution | [republic-job-orchestrator](https://github.com/erhnysr/republic-job-orchestrator) |
-| 📊 Points Tracker | Validator rewards & leaderboard | [republic-points-tracker](https://github.com/erhnysr/republic-points-tracker) |
+---
 
-## 📈 Stats
+## 🏗️ Architecture
+```
+┌─────────────────────────────────────────────────────┐
+│                  Republic AI Node                    │
+│                                                      │
+│  ┌─────────────┐    ┌──────────────────────────┐    │
+│  │  republicd  │    │     full-auto.sh          │    │
+│  │  (Cosmos)   │◄──►│  Job Submit → Inference   │    │
+│  │  Port 43657 │    │  → Result Submit          │    │
+│  └─────────────┘    └──────────┬───────────────┘    │
+│                                │                     │
+│  ┌─────────────┐    ┌──────────▼───────────────┐    │
+│  │  Cloudflare │    │   Docker GPU Container    │    │
+│  │   Tunnel    │◄──►│  republic-llm-inference   │    │
+│  │  (Public)   │    │  RTX 4050 • CUDA          │    │
+│  └─────────────┘    └──────────────────────────┘    │
+│                                                      │
+│  ┌─────────────┐    ┌──────────────────────────┐    │
+│  │  watchdog   │    │    HTTP Server :8080      │    │
+│  │  (Monitor)  │    │  /var/lib/republic/jobs   │    │
+│  └─────────────┘    └──────────────────────────┘    │
+└─────────────────────────────────────────────────────┘
+```
 
-- ✅ Active validator since January 29, 2026
-- ✅ 1,008,342 RAI voting power
-- ✅ 10,000+ compute jobs processed
-- ✅ 2 open PRs to RepublicAI/networks (pending review)
-- ✅ Developer role recipient
+---
 
-## 🔗 Links
+## 📦 What's Included
 
-- **Live Dashboard:** https://erhnysr.github.io/republic-ai-node
-- **Validator:** raivaloper1xnjkyyggaz54288vtrsle9wjwqz5tz4lttk8ka
-- **GitHub:** https://github.com/erhnysr
+| Component | Description | Status |
+|-----------|-------------|--------|
+| `scripts/install.sh` | One-command node installer | ✅ |
+| `scripts/full-auto.sh` | Full job automation pipeline | ✅ |
+| `scripts/watchdog.sh` | Auto-restart on crash | ✅ |
+| `scripts/unjail.sh` | Auto-unjail monitor | ✅ |
+| `scripts/monitor.sh` | Real-time dashboard | ✅ |
+| `scripts/health_check.sh` | Node health checker | ✅ |
+| `monitoring/gpu_tracker.py` | GPU metrics tracker | ✅ |
+| `docker-compose.yml` | Full stack deployment | ✅ |
 
-## 📚 Documentation
+---
 
-- [WSL2 Windows Setup Guide](https://github.com/RepublicAI/networks/pull/26)
-- [GPU Compute Jobs Guide](https://github.com/RepublicAI/networks/pull/27)
+## 🖥️ System Requirements
 
-## 📄 License
+| Component | Minimum | Recommended |
+|-----------|---------|-------------|
+| OS | Ubuntu 22.04 | Ubuntu 24.04 / WSL2 |
+| CPU | 4 cores | 8+ cores |
+| RAM | 8 GB | 16 GB |
+| Storage | 100 GB SSD | 200 GB NVMe |
+| GPU | GTX 1080 (8GB) | RTX 3090+ (24GB) |
+| Network | 100 Mbps | 1 Gbps |
 
-MIT License - Open source, free to use.
+---
+
+## 📖 Documentation
+
+| Guide | Description |
+|-------|-------------|
+| [SETUP.md](docs/SETUP.md) | Full node setup guide |
+| [AUTO-COMPUTE.md](docs/AUTO-COMPUTE.md) | Job automation guide |
+| [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common issues & fixes |
+| [WSL2-GUIDE.md](docs/WSL2-GUIDE.md) | Windows WSL2 setup |
+
+---
+
+## ⚙️ Scripts
+
+### Start Full-Auto Pipeline
+```bash
+# Start HTTP server
+cd /var/lib/republic/jobs && python3 -m http.server 8080 &
+
+# Start Cloudflare tunnel
+cloudflared tunnel --url http://localhost:8080 &
+
+# Start full-auto
+nohup ~/full-auto.sh >> ~/full-auto.log 2>&1 &
+
+# Start watchdog
+nohup ~/watchdog.sh >> ~/watchdog.log 2>&1 &
+```
+
+### Monitor
+```bash
+# Real-time logs
+tail -f ~/full-auto.log
+
+# Health check
+bash scripts/health_check.sh
+
+# GPU status
+nvidia-smi
+```
+
+---
+
+## 📊 Performance
+
+| Metric | Value |
+|--------|-------|
+| GPU | NVIDIA RTX 4050 Laptop (6GB) |
+| Inference time | ~15-17 seconds |
+| Jobs per hour | ~40-50 |
+| Total jobs processed | 200,000+ |
+| Success rate | 99.3% |
+| Uptime | 24/7 |
+
+---
+
+## 🔧 Known Issues & Fixes
+
+### Bech32 Address Bug
+```bash
+# submit-job-result sends 'rai' prefix instead of 'raivaloper'
+# Fix: use --generate-only + python fix + manual sign
+```
+See [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for full fix.
+
+### WSL2 Public URL
+```bash
+# WSL2 has no public IP — use Cloudflare tunnel
+cloudflared tunnel --url http://localhost:8080
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
+
+1. Fork the repo
+2. Create your branch: `git checkout -b feat/your-feature`
+3. Commit: `git commit -m 'feat: add your feature'`
+4. Push: `git push origin feat/your-feature`
+5. Open a Pull Request
+
+---
+
+## 📬 Contact
+
+- **Discord:** erhnysr
+- **Twitter/X:** [@Erhnyasar](https://x.com/Erhnyasar)
+- **Medium:** [@erhnysr](https://medium.com/@erhnysr)
+- **Validator:** [ERHANREPU](https://explorer.republicai.io)
+
+---
+
+<div align="center">
+
+**Built with ❤️ for the Republic AI community**
+
+*If this helped you, please ⭐ star the repo!*
+
+</div>
