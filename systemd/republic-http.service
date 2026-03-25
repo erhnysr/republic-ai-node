@@ -1,0 +1,12 @@
+[Unit]
+Description=Republic Jobs HTTP Server
+After=network.target
+
+[Service]
+User=REPLACE_WITH_YOUR_USER
+WorkingDirectory=/var/lib/republic/jobs
+ExecStart=/usr/bin/python3 -m http.server 8080
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

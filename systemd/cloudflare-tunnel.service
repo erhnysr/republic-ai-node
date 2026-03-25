@@ -1,0 +1,13 @@
+[Unit]
+Description=Cloudflare Tunnel Auto
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=REPLACE_WITH_YOUR_USER
+ExecStart=/home/REPLACE_WITH_YOUR_USER/republic-ai-node/scripts/start-tunnel.sh
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

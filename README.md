@@ -7,12 +7,13 @@
 [![Chain](https://img.shields.io/badge/Chain-raitestnet__77701--1-blue)](https://explorer.republicai.io)
 [![Validator](https://img.shields.io/badge/Validator-ERHANREPU-green)](https://explorer.republicai.io)
 [![GPU](https://img.shields.io/badge/GPU-RTX%204050-76b900)](https://github.com/erhnysr/republic-ai-node)
-[![Jobs](https://img.shields.io/badge/Jobs%20Processed-200K%2B-orange)](https://github.com/erhnysr/republic-ai-node)
+[![Rank](https://img.shields.io/badge/Leaderboard-%234%20Top%20Validator-gold)](https://explorer.republicai.io/compute)
+[![Success Rate](https://img.shields.io/badge/Success%20Rate-94.6%25-brightgreen)](https://explorer.republicai.io/compute)
 
 **Production-ready toolkit for Republic AI validators**
 *Full-auto GPU compute • Thermal protection • Cloudflare tunnel • WSL2 support*
 
-[Quick Start](#quick-start) • [Documentation](#documentation) • [Scripts](#scripts) • [Monitoring](#monitoring)
+[Quick Start](#quick-start) • [Documentation](#documentation) • [Scripts](#scripts) • [Troubleshooting](#troubleshooting)
 
 </div>
 
@@ -32,14 +33,14 @@ curl -sSL https://raw.githubusercontent.com/erhnysr/republic-ai-node/main/script
 │                                                      │
 │  ┌─────────────┐    ┌──────────────────────────┐    │
 │  │  republicd  │    │     full-auto.sh          │    │
-│  │  (Cosmos)   │◄──►│  Job Submit → Inference   │    │
-│  │  Port 43657 │    │  → Result Submit          │    │
+│  │  (Cosmos)   │◄──►│  Submit → Inference       │    │
+│  │  Port 43657 │    │  → Bech32 Fix → Submit    │    │
 │  └─────────────┘    └──────────┬───────────────┘    │
 │                                │                     │
 │  ┌─────────────┐    ┌──────────▼───────────────┐    │
 │  │  Cloudflare │    │   Docker GPU Container    │    │
 │  │   Tunnel    │◄──►│  republic-llm-inference   │    │
-│  │  (Public)   │    │  RTX 4050 • CUDA          │    │
+│  │  (Public)   │    │  RTX 4050 • CUDA 11.8     │    │
 │  └─────────────┘    └──────────────────────────┘    │
 │                                                      │
 │  ┌─────────────┐    ┌──────────────────────────┐    │
@@ -56,13 +57,15 @@ curl -sSL https://raw.githubusercontent.com/erhnysr/republic-ai-node/main/script
 | Component | Description | Status |
 |-----------|-------------|--------|
 | `scripts/install.sh` | One-command node installer | ✅ |
-| `scripts/full-auto.sh` | Full job automation pipeline | ✅ |
+| `scripts/full-auto.sh` | Full job automation + thermal protection | ✅ |
 | `scripts/watchdog.sh` | Auto-restart on crash | ✅ |
-| `scripts/unjail.sh` | Auto-unjail monitor | ✅ |
-| `scripts/monitor.sh` | Real-time dashboard | ✅ |
-| `scripts/health_check.sh` | Node health checker | ✅ |
+| `scripts/start-tunnel.sh` | Cloudflare tunnel + auto URL update | ✅ |
+| `scripts/health_check.sh` | Full node health checker | ✅ |
+| `systemd/` | Production systemd service files | ✅ |
+| `docs/WSL2-GUIDE.md` | WSL2 public URL solution | ✅ |
+| `docs/TROUBLESHOOTING.md` | Real issues & battle-tested fixes | ✅ |
+| `docs/AUTO-COMPUTE.md` | Job automation guide | ✅ |
 | `monitoring/gpu_tracker.py` | GPU metrics tracker | ✅ |
-| `docker-compose.yml` | Full stack deployment | ✅ |
 
 ---
 
@@ -83,10 +86,9 @@ curl -sSL https://raw.githubusercontent.com/erhnysr/republic-ai-node/main/script
 
 | Guide | Description |
 |-------|-------------|
-| [SETUP.md](docs/SETUP.md) | Full node setup guide |
-| [AUTO-COMPUTE.md](docs/AUTO-COMPUTE.md) | Job automation guide |
-| [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common issues & fixes |
-| [WSL2-GUIDE.md](docs/WSL2-GUIDE.md) | Windows WSL2 setup |
+| [WSL2-GUIDE.md](docs/WSL2-GUIDE.md) | Critical: public URL setup for WSL2 |
+| [AUTO-COMPUTE.md](docs/AUTO-COMPUTE.md) | Full job automation guide |
+| [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Real issues & battle-tested fixes |
 
 ---
 
@@ -94,30 +96,43 @@ curl -sSL https://raw.githubusercontent.com/erhnysr/republic-ai-node/main/script
 
 ### Start Full-Auto Pipeline
 ```bash
-# Start HTTP server
-cd /var/lib/republic/jobs && python3 -m http.server 8080 &
+# 1. Start Cloudflare tunnel (WSL2 only)
+sudo systemctl start cloudflare-tunnel.service
 
-# Start Cloudflare tunnel
-cloudflared tunnel --url http://localhost:8080 &
-
-# Start full-auto
+# 2. Start full-auto
 nohup ~/full-auto.sh >> ~/full-auto.log 2>&1 &
 
-# Start watchdog
+# 3. Start watchdog
 nohup ~/watchdog.sh >> ~/watchdog.log 2>&1 &
+
+# 4. Health check
+bash scripts/health_check.sh
 ```
 
 ### Monitor
 ```bash
-# Real-time logs
 tail -f ~/full-auto.log
-
-# Health check
 bash scripts/health_check.sh
-
-# GPU status
-nvidia-smi
 ```
+
+---
+
+## 🔧 Known Issues & Fixes
+
+### ⚠️ WSL2: result_fetch_endpoint Empty
+Most common issue. Check immediately if team says "endpoint not reachable":
+```bash
+grep "SERVER_IP" ~/full-auto.sh  # Must NOT be empty!
+```
+→ Full fix: [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
+
+### ⚠️ Bech32 Address Bug
+`submit-job-result` sends `rai` prefix instead of `raivaloper` — TX rejected.
+→ Already handled in `full-auto.sh` via Python fix.
+
+### ⚠️ Wrong Key Name
+Sidecar running with `--from wallet` but key name is `validator`.
+→ Full fix: [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ---
 
@@ -128,38 +143,9 @@ nvidia-smi
 | GPU | NVIDIA RTX 4050 Laptop (6GB) |
 | Inference time | ~15-17 seconds |
 | Jobs per hour | ~40-50 |
-| Total jobs processed | 200,000+ |
-| Success rate | 99.3% |
-| Uptime | 24/7 |
-
----
-
-## 🔧 Known Issues & Fixes
-
-### Bech32 Address Bug
-```bash
-# submit-job-result sends 'rai' prefix instead of 'raivaloper'
-# Fix: use --generate-only + python fix + manual sign
-```
-See [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for full fix.
-
-### WSL2 Public URL
-```bash
-# WSL2 has no public IP — use Cloudflare tunnel
-cloudflared tunnel --url http://localhost:8080
-```
-
----
-
-## 🤝 Contributing
-
-Contributions welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
-
-1. Fork the repo
-2. Create your branch: `git checkout -b feat/your-feature`
-3. Commit: `git commit -m 'feat: add your feature'`
-4. Push: `git push origin feat/your-feature`
-5. Open a Pull Request
+| Total jobs processed | 725,000+ |
+| Success rate | 94.6% |
+| Leaderboard rank | #4 |
 
 ---
 
@@ -167,8 +153,7 @@ Contributions welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
 
 - **Discord:** erhnysr
 - **Twitter/X:** [@Erhnyasar](https://x.com/Erhnyasar)
-- **Medium:** [@erhnysr](https://medium.com/@erhnysr)
-- **Validator:** [ERHANREPU](https://explorer.republicai.io)
+- **Validator:** [ERHANREPU on Explorer](https://explorer.republicai.io/compute)
 
 ---
 

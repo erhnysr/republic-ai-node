@@ -1,114 +1,64 @@
 #!/bin/bash
-# Republic AI Node - Health Check Script
-# Checks validator status, sync status, and alerts if issues found
-
-set -e
-
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+# Republic AI Node - Enhanced Health Check
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
 
 echo "🔍 Republic AI Node Health Check"
 echo "================================="
-echo ""
 
-# Check if republicd is installed
-if ! command -v republicd &> /dev/null; then
-    echo -e "${RED}❌ republicd not found!${NC}"
-    echo "Install: curl -sSL https://raw.githubusercontent.com/erhnysr/republic-ai-node/main/scripts/install.sh | bash"
-    exit 1
-fi
+# 1. Process check
+echo -e "\n📊 Processes:"
+pgrep -f "full-auto.sh" > /dev/null && echo -e "  ${GREEN}✅ full-auto.sh running${NC}" || echo -e "  ${RED}❌ full-auto.sh NOT running!${NC}"
+pgrep -f "watchdog.sh" > /dev/null && echo -e "  ${GREEN}✅ watchdog.sh running${NC}" || echo -e "  ${RED}❌ watchdog.sh NOT running!${NC}"
+pgrep -f "cloudflared" > /dev/null && echo -e "  ${GREEN}✅ cloudflared running${NC}" || echo -e "  ${RED}❌ cloudflared NOT running!${NC}"
+systemctl is-active --quiet republic-http.service && echo -e "  ${GREEN}✅ HTTP server running (8080)${NC}" || echo -e "  ${RED}❌ HTTP server NOT running!${NC}"
 
-# Check if service is running
-echo "📊 Checking service status..."
-if systemctl is-active --quiet republicd 2>/dev/null; then
-    echo -e "${GREEN}✓ Service is running${NC}"
-    UPTIME=$(systemctl show -p ActiveEnterTimestamp republicd | cut -d'=' -f2)
-    echo "  Uptime: $UPTIME"
+# 2. Tunnel URL check
+echo -e "\n🌐 Tunnel URL:"
+TUNNEL_FILE="$HOME/tunnel-url.txt"
+if [ -f "$TUNNEL_FILE" ]; then
+    TUNNEL_URL=$(cat $TUNNEL_FILE)
+    echo "  URL: $TUNNEL_URL"
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$TUNNEL_URL" 2>/dev/null)
+    [ "$HTTP_CODE" != "000" ] && echo -e "  ${GREEN}✅ Reachable (HTTP $HTTP_CODE)${NC}" || echo -e "  ${RED}❌ NOT reachable!${NC}"
 else
-    if pgrep -x "republicd" > /dev/null; then
-        echo -e "${YELLOW}⚠ Process running but no systemd service${NC}"
-    else
-        echo -e "${RED}❌ republicd is NOT running!${NC}"
-        exit 1
-    fi
+    echo -e "  ${RED}❌ tunnel-url.txt not found!${NC}"
 fi
 
-echo ""
-echo "🔗 Checking node status..."
-
-# Get node status
-STATUS=$(republicd status 2>&1 || echo "error")
-
-if [[ "$STATUS" == "error" ]]; then
-    echo -e "${RED}❌ Cannot connect to node${NC}"
-    exit 1
-fi
-
-# Parse status
-BLOCK_HEIGHT=$(echo $STATUS | jq -r '.sync_info.latest_block_height' 2>/dev/null || echo "N/A")
-CATCHING_UP=$(echo $STATUS | jq -r '.sync_info.catching_up' 2>/dev/null || echo "N/A")
-VOTING_POWER=$(echo $STATUS | jq -r '.validator_info.voting_power' 2>/dev/null || echo "0")
-MONIKER=$(echo $STATUS | jq -r '.node_info.moniker' 2>/dev/null || echo "N/A")
-
-echo "  Moniker: $MONIKER"
-echo "  Block Height: $BLOCK_HEIGHT"
-echo "  Voting Power: $VOTING_POWER"
-
-# Check sync status
-if [[ "$CATCHING_UP" == "false" ]]; then
-    echo -e "  Sync: ${GREEN}✓ Synced${NC}"
+# 3. SERVER_IP in full-auto.sh check
+echo -e "\n🔗 full-auto.sh SERVER_IP:"
+SCRIPT_URL=$(grep "SERVER_IP=" $HOME/full-auto.sh | head -1 | cut -d'"' -f2)
+if [ -z "$SCRIPT_URL" ]; then
+    echo -e "  ${RED}❌ SERVER_IP is EMPTY! Jobs will have broken endpoint!${NC}"
 else
-    echo -e "  Sync: ${YELLOW}⚠ Catching up...${NC}"
+    echo -e "  ${GREEN}✅ $SCRIPT_URL${NC}"
 fi
 
-echo ""
-echo "🎯 Checking validator status..."
+# 4. Last job on-chain check
+echo -e "\n📋 Last Job On-Chain:"
+LAST_JOB=$(grep "Inference done for job" $HOME/full-auto.log 2>/dev/null | tail -1 | awk '{print $NF}')
+if [ ! -z "$LAST_JOB" ]; then
+    JOB_INFO=$(republicd query computevalidation job $LAST_JOB --node tcp://localhost:43657 -o json 2>/dev/null)
+    ENDPOINT=$(echo $JOB_INFO | jq -r '.job.result_fetch_endpoint' 2>/dev/null)
+    STATUS=$(echo $JOB_INFO | jq -r '.job.status' 2>/dev/null)
+    echo "  Job ID: $LAST_JOB"
+    echo "  Status: $STATUS"
+    echo "  Endpoint: $ENDPOINT"
+    [[ "$ENDPOINT" == *"trycloudflare.com"* ]] && echo -e "  ${GREEN}✅ Endpoint looks correct${NC}" || echo -e "  ${RED}❌ Endpoint broken! (empty or localhost)${NC}"
+fi
 
-# Get validator info (replace with your validator address)
-VALIDATOR_ADDR="raivaloper1xnjkyyggaz54288vtrsle9wjwqz5tz4lttk8ka"
-VAL_INFO=$(republicd query staking validator $VALIDATOR_ADDR --home ~/.republic 2>&1 || echo "error")
-
-if [[ "$VAL_INFO" == "error" ]] || [[ "$VAL_INFO" == *"not found"* ]]; then
-    echo -e "${YELLOW}⚠ Validator info not available${NC}"
+# 5. GPU check
+echo -e "\n🎮 GPU:"
+GPU_INFO=$(nvidia-smi --query-gpu=name,temperature.gpu,utilization.gpu,memory.used,memory.total --format=csv,noheader 2>/dev/null)
+if [ ! -z "$GPU_INFO" ]; then
+    echo -e "  ${GREEN}✅ $GPU_INFO${NC}"
 else
-    VAL_STATUS=$(echo $VAL_INFO | grep -oP 'status: \K\S+' || echo "N/A")
-    VAL_TOKENS=$(echo $VAL_INFO | grep -oP 'tokens: "\K[^"]+' || echo "0")
-    
-    echo "  Status: $VAL_STATUS"
-    echo "  Tokens: $VAL_TOKENS"
-    
-    if [[ "$VAL_STATUS" == "BOND_STATUS_BONDED" ]]; then
-        echo -e "  ${GREEN}✓ Validator is ACTIVE${NC}"
-    elif [[ "$VAL_STATUS" == "BOND_STATUS_UNBONDING" ]]; then
-        echo -e "  ${RED}❌ Validator is UNBONDING!${NC}"
-        echo "  Fix: republicd tx slashing unjail --from <KEY> --chain-id raitestnet_77701-1"
-    else
-        echo -e "  ${YELLOW}⚠ Validator status: $VAL_STATUS${NC}"
-    fi
+    echo -e "  ${YELLOW}⚠️  nvidia-smi not available${NC}"
 fi
 
-echo ""
-echo "💾 System Resources..."
+# 6. Validator status
+echo -e "\n🎯 Validator:"
+VAL_STATUS=$(republicd query staking validator raivaloper1xnjkyyggaz54288vtrsle9wjwqz5tz4lttk8ka --node tcp://localhost:43657 -o json 2>/dev/null | jq -r '.validator.status' 2>/dev/null)
+[ "$VAL_STATUS" == "BOND_STATUS_BONDED" ] && echo -e "  ${GREEN}✅ BONDED (active)${NC}" || echo -e "  ${RED}❌ Status: $VAL_STATUS${NC}"
 
-# Check disk space
-DISK_USAGE=$(df -h ~/.republic | tail -1 | awk '{print $5}' | sed 's/%//')
-if [ "$DISK_USAGE" -gt 80 ]; then
-    echo -e "  Disk: ${RED}❌ ${DISK_USAGE}% used (WARNING!)${NC}"
-else
-    echo -e "  Disk: ${GREEN}✓ ${DISK_USAGE}% used${NC}"
-fi
-
-# Check memory
-MEM_USAGE=$(free | grep Mem | awk '{print int($3/$2 * 100)}')
-if [ "$MEM_USAGE" -gt 90 ]; then
-    echo -e "  Memory: ${RED}❌ ${MEM_USAGE}% used${NC}"
-else
-    echo -e "  Memory: ${GREEN}✓ ${MEM_USAGE}% used${NC}"
-fi
-
-echo ""
-echo -e "${GREEN}🎉 Health check complete!${NC}"
-echo ""
+echo -e "\n================================="
+echo "📊 Explorer: https://explorer.republicai.io/compute"
