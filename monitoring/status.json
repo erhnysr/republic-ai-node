@@ -1,0 +1,17 @@
+{
+  "updated_at": "2026-03-26 12:47:06",
+  "wsl": {
+    "full_auto": "running",
+    "gpu_ok": "no",
+    "gpu_name": "N/A",
+    "gpu_temp": "N/A",
+    "gpu_util": "N/A"
+  },
+  "vps": {
+    "height": "848907",
+    "catching_up": "false",
+    "voting_power": "11008341",
+    "validator_status": "BOND_STATUS_BONDED",
+    "jailed": "N/A"
+  }
+}

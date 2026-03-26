@@ -1,124 +1,449 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Republic AI Node Monitor</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 2rem;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .header {
-            text-align: center;
-            color: white;
-            margin-bottom: 3rem;
-        }
-        .header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
-        .header p { opacity: 0.9; }
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .card {
-            background: white;
-            border-radius: 1rem;
-            padding: 1.5rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        .card h3 {
-            color: #667eea;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 0.5rem;
-        }
-        .card .value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #2d3748;
-        }
-        .status { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.875rem; font-weight: 600; }
-        .status.active { background: #48bb78; color: white; }
-        .status.syncing { background: #f6ad55; color: white; }
-        .refresh-btn {
-            background: white;
-            color: #667eea;
-            border: none;
-            padding: 0.75rem 2rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: block;
-            margin: 2rem auto;
-        }
-        .refresh-btn:hover { opacity: 0.9; }
-    </style>
+<meta charset="UTF-8">
+<title>ErhNode Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+:root {
+  --bg: #14213a;
+  --bg-soft: #1a2947;
+  --card: #203252;
+  --card-2: #253a5f;
+  --border: #314a76;
+  --text: #eef4ff;
+  --sub: #b8c4d9;
+  --ok: #22c55e;
+  --warn: #f59e0b;
+  --bad: #ef4444;
+  --shadow: rgba(0,0,0,.22);
+}
+
+body.light {
+  --bg: #eef4fb;
+  --bg-soft: #e6eef9;
+  --card: #ffffff;
+  --card-2: #f8fbff;
+  --border: #d7e1f0;
+  --text: #0f172a;
+  --sub: #64748b;
+  --shadow: rgba(15,23,42,.08);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 28px;
+  font-family: Inter, system-ui, Arial, sans-serif;
+  background:
+    radial-gradient(circle at top left, #22365c 0%, var(--bg) 38%, #10192c 100%);
+  color: var(--text);
+  transition: background .25s ease, color .25s ease;
+}
+
+body.light {
+  background:
+    radial-gradient(circle at top left, #ffffff 0%, var(--bg) 45%, #dde8f7 100%);
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+h1 {
+  margin: 0 0 6px;
+  font-size: 34px;
+  line-height: 1.1;
+}
+
+.sub {
+  color: var(--sub);
+  font-size: 15px;
+}
+
+.toggle {
+  cursor: pointer;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  box-shadow: 0 8px 24px var(--shadow);
+  user-select: none;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.card {
+  background: linear-gradient(180deg, var(--card), var(--card-2));
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 10px 28px var(--shadow);
+}
+
+.card.wide {
+  grid-column: span 2;
+}
+
+.title {
+  color: var(--sub);
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.value {
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1.15;
+  word-break: break-word;
+  margin-bottom: 6px;
+}
+
+.meta {
+  color: var(--sub);
+  font-size: 14px;
+}
+
+.ok { color: var(--ok); }
+.warn { color: var(--warn); }
+.bad { color: var(--bad); }
+
+.footer {
+  margin-top: 18px;
+  color: var(--sub);
+  font-size: 14px;
+}
+
+.alert-box {
+  min-height: 72px;
+  white-space: pre-wrap;
+}
+
+.counter {
+  font-size: 30px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.chart-wrap {
+  height: 140px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.04);
+}
+
+body.light .chart-wrap {
+  background: rgba(15,23,42,.02);
+  border: 1px solid rgba(15,23,42,.05);
+}
+
+svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.axis-line {
+  stroke: rgba(255,255,255,.08);
+  stroke-width: 1;
+}
+
+body.light .axis-line {
+  stroke: rgba(15,23,42,.08);
+}
+
+.line-blue {
+  fill: none;
+  stroke: #60a5fa;
+  stroke-width: 3;
+}
+
+.line-green {
+  fill: none;
+  stroke: #22c55e;
+  stroke-width: 3;
+}
+
+.dot-blue {
+  fill: #93c5fd;
+}
+
+.dot-green {
+  fill: #4ade80;
+}
+
+.small-note {
+  margin-top: 8px;
+  color: var(--sub);
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .card.wide {
+    grid-column: span 1;
+  }
+}
+</style>
 </head>
+
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🚀 Republic AI Node Monitor</h1>
-            <p>Real-time validator and GPU mining statistics</p>
-        </div>
-        
-        <div class="cards">
-            <div class="card">
-                <h3>Node Status</h3>
-                <div class="value"><span class="status active" id="status">Active</span></div>
-            </div>
-            <div class="card">
-                <h3>Current Block</h3>
-                <div class="value" id="block">Loading...</div>
-            </div>
-            <div class="card">
-                <h3>Voting Power</h3>
-                <div class="value" id="voting-power">Loading...</div>
-            </div>
-            <div class="card">
-                <h3>Catching Up</h3>
-                <div class="value" id="catching-up">Loading...</div>
-            </div>
-            <div class="card">
-                <h3>Jobs Assigned</h3>
-                <div class="value" id="jobs">Loading...</div>
-            </div>
-            <div class="card">
-                <h3>GPU Status</h3>
-                <div class="value" id="gpu-status">Active</div>
-            </div>
-        </div>
-        
-        <button class="refresh-btn" onclick="fetchData()">🔄 Refresh Data</button>
+  <div class="topbar">
+    <div>
+      <h1>⚡ ErhNode Dashboard</h1>
+      <div class="sub">Simple local monitoring panel for VPS + WSL</div>
+    </div>
+    <div class="toggle" onclick="toggleTheme()">🌙 / ☀️ Theme</div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="title">VPS Block Height</div>
+      <div class="value" id="height">...</div>
+      <div class="meta">Latest chain height</div>
     </div>
 
-    <script>
-        async function fetchData() {
-            try {
-                // Bu kısım RPC'den veri çekecek - şimdilik örnek veri
-                document.getElementById('block').textContent = '531,783';
-                document.getElementById('voting-power').textContent = '4,003 RAI';
-                document.getElementById('catching-up').textContent = 'False ✅';
-                document.getElementById('jobs').textContent = '1 Pending';
-            } catch (e) {
-                console.error('Error fetching data:', e);
-            }
+    <div class="card">
+      <div class="title">VPS Sync</div>
+      <div class="value" id="catching_up">...</div>
+      <div class="meta">catching_up status</div>
+    </div>
+
+    <div class="card">
+      <div class="title">Validator Status</div>
+      <div class="value" id="validator_status">...</div>
+      <div class="meta">Bond / jail state</div>
+    </div>
+
+    <div class="card">
+      <div class="title">Voting Power</div>
+      <div class="value" id="voting_power">...</div>
+      <div class="meta">Current voting power</div>
+    </div>
+
+    <div class="card">
+      <div class="title">WSL Full Auto</div>
+      <div class="value" id="full_auto">...</div>
+      <div class="meta">Compute loop status</div>
+    </div>
+
+    <div class="card">
+      <div class="title">GPU Health</div>
+      <div class="value" id="gpu_ok">...</div>
+      <div class="meta" id="gpu_name">...</div>
+    </div>
+
+    <div class="card">
+      <div class="title">GPU Temp</div>
+      <div class="value" id="gpu_temp">...</div>
+      <div class="meta">°C</div>
+    </div>
+
+    <div class="card">
+      <div class="title">GPU Utilization</div>
+      <div class="value" id="gpu_util">...</div>
+      <div class="meta">%</div>
+    </div>
+
+    <div class="card">
+      <div class="title">Uptime Counter</div>
+      <div class="counter" id="uptime_counter">00:00:00</div>
+      <div class="meta">Time since dashboard opened</div>
+    </div>
+
+    <div class="card wide">
+      <div class="title">Last Alert</div>
+      <div class="value alert-box" id="last_alert">No alerts yet.</div>
+      <div class="small-note">Reads the latest line from local watchdog logs when available.</div>
+    </div>
+
+    <div class="card wide">
+      <div class="title">Mini Graph — GPU Temperature</div>
+      <div class="chart-wrap">
+        <svg viewBox="0 0 600 140" preserveAspectRatio="none">
+          <line class="axis-line" x1="0" y1="120" x2="600" y2="120"></line>
+          <polyline id="gpu_temp_line" class="line-blue" points=""></polyline>
+        </svg>
+      </div>
+      <div class="small-note">Recent dashboard refresh samples</div>
+    </div>
+
+    <div class="card wide">
+      <div class="title">Mini Graph — VPS Block Height</div>
+      <div class="chart-wrap">
+        <svg viewBox="0 0 600 140" preserveAspectRatio="none">
+          <line class="axis-line" x1="0" y1="120" x2="600" y2="120"></line>
+          <polyline id="height_line" class="line-green" points=""></polyline>
+        </svg>
+      </div>
+      <div class="small-note">Recent dashboard refresh samples</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Last update: <span id="updated_at">...</span>
+  </div>
+
+<script>
+const STORAGE_KEY = "erhnode-theme";
+const GPU_HISTORY_KEY = "erhnode-gpu-history";
+const HEIGHT_HISTORY_KEY = "erhnode-height-history";
+const MAX_POINTS = 20;
+
+let startTime = Date.now();
+
+function toggleTheme() {
+  document.body.classList.toggle("light");
+  localStorage.setItem(STORAGE_KEY, document.body.classList.contains("light") ? "light" : "dark");
+}
+
+function applySavedTheme() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === "light") {
+    document.body.classList.add("light");
+  }
+}
+
+function paint(id, value, goodValues = [], badValues = []) {
+  const node = document.getElementById(id);
+  node.textContent = value;
+  node.classList.remove("ok", "warn", "bad");
+
+  if (goodValues.includes(String(value))) {
+    node.classList.add("ok");
+  } else if (badValues.includes(String(value))) {
+    node.classList.add("bad");
+  } else {
+    node.classList.add("warn");
+  }
+}
+
+function formatUptime(ms) {
+  const total = Math.floor(ms / 1000);
+  const h = String(Math.floor(total / 3600)).padStart(2, "0");
+  const m = String(Math.floor((total % 3600) / 60)).padStart(2, "0");
+  const s = String(total % 60).padStart(2, "0");
+  return `${h}:${m}:${s}`;
+}
+
+function tickUptime() {
+  document.getElementById("uptime_counter").textContent = formatUptime(Date.now() - startTime);
+}
+
+function loadHistory(key) {
+  try {
+    return JSON.parse(localStorage.getItem(key) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(key, arr) {
+  localStorage.setItem(key, JSON.stringify(arr.slice(-MAX_POINTS)));
+}
+
+function pushHistory(key, value) {
+  const arr = loadHistory(key);
+  arr.push(value);
+  saveHistory(key, arr);
+  return arr.slice(-MAX_POINTS);
+}
+
+function normalizePoints(arr, width = 600, height = 120) {
+  if (!arr.length) return "";
+  const min = Math.min(...arr);
+  const max = Math.max(...arr);
+  const range = max - min || 1;
+
+  return arr.map((v, i) => {
+    const x = (i / Math.max(arr.length - 1, 1)) * width;
+    const y = height - ((v - min) / range) * (height - 10) + 5;
+    return `${x},${y}`;
+  }).join(" ");
+}
+
+function drawGraph(id, arr) {
+  document.getElementById(id).setAttribute("points", normalizePoints(arr));
+}
+
+async function loadLastAlert() {
+  try {
+    const candidates = [
+      "last_alert.txt",
+      "../last_alert.txt"
+    ];
+
+    for (const path of candidates) {
+      try {
+        const res = await fetch(path + "?_=" + Date.now());
+        if (res.ok) {
+          const txt = (await res.text()).trim();
+          if (txt) {
+            document.getElementById("last_alert").textContent = txt;
+            return;
+          }
         }
-        
-        // İlk yüklemede veri çek
-        fetchData();
-        
-        // Her 10 saniyede bir güncelle
-        setInterval(fetchData, 10000);
-    </script>
+      } catch {}
+    }
+  } catch {}
+  document.getElementById("last_alert").textContent = "No alerts yet.";
+}
+
+async function loadStatus() {
+  try {
+    const res = await fetch("./status.json?_=" + Date.now());
+    const data = await res.json();
+
+    document.getElementById("height").textContent = data.vps.height;
+    paint("catching_up", data.vps.catching_up, ["false"], ["true"]);
+    paint("validator_status", data.vps.validator_status, ["BOND_STATUS_BONDED"], ["unreachable"]);
+    document.getElementById("voting_power").textContent = data.vps.voting_power;
+
+    paint("full_auto", data.wsl.full_auto, ["running"], ["stopped"]);
+    paint("gpu_ok", data.wsl.gpu_ok, ["yes"], ["no"]);
+
+    document.getElementById("gpu_name").textContent = data.wsl.gpu_name;
+    document.getElementById("gpu_temp").textContent = data.wsl.gpu_temp;
+    document.getElementById("gpu_util").textContent = data.wsl.gpu_util;
+    document.getElementById("updated_at").textContent = data.updated_at;
+
+    const gpuTemp = parseFloat(data.wsl.gpu_temp);
+    const blockHeight = parseFloat(data.vps.height);
+
+    if (!isNaN(gpuTemp)) {
+      const gpuHist = pushHistory(GPU_HISTORY_KEY, gpuTemp);
+      drawGraph("gpu_temp_line", gpuHist);
+    }
+
+    if (!isNaN(blockHeight)) {
+      const heightHist = pushHistory(HEIGHT_HISTORY_KEY, blockHeight);
+      drawGraph("height_line", heightHist);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+applySavedTheme();
+tickUptime();
+setInterval(tickUptime, 1000);
+
+loadStatus();
+loadLastAlert();
+
+setInterval(loadStatus, 10000);
+setInterval(loadLastAlert, 15000);
+</script>
 </body>
 </html>
